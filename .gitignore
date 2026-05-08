@@ -1,0 +1,51 @@
+# Environments and secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+.venv-emotion/
+.venv-interview/
+.venv-frontend/
+.venv/
+emotion_log.csv
+artifacts/  
+# Python cachaes/build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Notebook and local runtime noise
+.ipynb_checkpoints/
+*.log
+*.pid
+
+# IDE and OS files
+.DS_Store
+.idea/
+.vscode/
+
+# Local/downloaded models and heavy assets
+models/
+*.pt
+*.pth
+*.onnx
+
+# Generated app artifacts
+emotion_log.csv
+interview_agent/artifacts/
+
+# User-local documents
+*.pdf

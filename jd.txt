@@ -1,0 +1,26 @@
+About the job
+We're hiring an Agentic AI Developer to build production-grade AI calling agents — voice-first autonomous agents that make and receive phone calls, hold natural conversations, and complete real tasks end-to-end.
+This is a hands-on role for someone who has already shipped calling agents to real users and knows the difference between a demo and a system that handles thousands of calls without breaking.
+If you've built voice agents on Vapi, Retell AI, Bland AI, Synthflow, or LiveKit, or scripted custom flows using Twilio + Deepgram + ElevenLabs + an LLM, we want to talk.
+What You'll Do
+Build AI calling agents (inbound and outbound) for real use cases — booking, lead qualification, support, follow-ups
+Design conversation flows, reasoning loops, tool use, and human handoff logic
+Integrate agents with CRMs, calendars, databases, and third-party APIs
+Optimize for the three things that matter in voice: latency, accuracy, and natural conversation
+Handle real-world challenges — interruptions, background noise, accents, silence, call transfers
+Monitor, debug, and continuously improve agents in production
+
+What You Must Have
+Proven experience building calling agents — via scripting (Python/Node.js) on telephony APIs, or using platforms like Vapi, Retell, Bland, or Synthflow
+Hands-on work with LLMs (Claude, GPT, Gemini) — prompt engineering, tool calling, context management
+Strong grasp of the voice AI stack: STT (Deepgram, AssemblyAI), TTS (ElevenLabs, Cartesia), telephony (Twilio, Plivo)
+Solid Python or Node.js skills
+Understanding of latency optimization — you know why 1.5s response time kills a call, and how to get it under 800ms
+Ability to design flows that handle real human messiness: interruptions, off-topic chatter, unclear requests
+
+Nice to Have
+Experience with LangGraph, CrewAI, or AutoGen
+Familiarity with MCP for tool integration
+Exposure to RAG and vector databases
+Compliance awareness — TCPA, HIPAA, or similar
+Domain experience in healthcare, fintech, or real estate

@@ -1,0 +1,31 @@
+# Clair 2 unified dependencies (entire application)
+
+# Core env/config
+python-dotenv>=1.0
+typing-extensions>=4.0
+
+# Interview graph + orchestration
+langgraph>=0.2.55
+pydantic>=2.0
+langsmith>=0.4.31
+
+# LLM + research
+google-genai>=1.38.0
+tavily-python>=0.5.0
+
+# Web/UI and networking
+streamlit>=1.38.0
+websockets>=12.0
+
+# Voice agents
+elevenlabs>=2.0
+pyaudio>=0.2.14
+
+# Emotion analysis / CV stack
+opencv-python>=4.8
+numpy>=1.24
+mediapipe>=0.10.0
+torch
+timm>=0.9,<0.10
+hsemotion>=0.2.0
+Pillow

@@ -1,0 +1,12 @@
+# Emotion scanner dependencies
+# Create a dedicated venv with Python 3.10–3.12, e.g.:
+#   brew install python@3.12
+#   /opt/homebrew/bin/python3.12 -m venv .venv-emotion
+#   .venv-emotion/bin/pip install -r requirements-emotion.txt
+opencv-python>=4.8
+mediapipe>=0.10.0
+torch
+# HSEmotion checkpoints match timm 0.9.x EfficientNet layout (newer timm breaks unpickled weights).
+timm>=0.9,<0.10
+hsemotion>=0.2.0
+Pillow
