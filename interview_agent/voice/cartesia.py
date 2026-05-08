@@ -11,6 +11,7 @@ import base64
 from datetime import datetime, timezone
 import json
 import os
+import socket
 import sys
 import time
 import urllib.error
@@ -31,6 +32,58 @@ INPUT_FORMATS = ("pcm_44100", "pcm_24000", "pcm_16000")
 
 class CartesiaConfigError(RuntimeError):
     pass
+
+
+def _is_retryable_url_error(exc: Exception) -> bool:
+    if isinstance(exc, TimeoutError | socket.timeout):
+        return True
+    if isinstance(exc, urllib.error.URLError):
+        reason = getattr(exc, "reason", None)
+        if isinstance(reason, TimeoutError | socket.timeout):
+            return True
+        text = str(reason or exc).lower()
+        return any(
+            token in text
+            for token in (
+                "unexpected_eof_while_reading",
+                "eof occurred in violation of protocol",
+                "timed out",
+                "connection reset",
+                "temporarily unavailable",
+                "tlsv1 alert",
+            )
+        )
+    return False
+
+
+def _urlopen_json_with_retry(
+    req: urllib.request.Request,
+    *,
+    timeout: int,
+    retries: int = 3,
+    base_delay_seconds: float = 1.0,
+) -> dict[str, Any]:
+    last_error: Exception | None = None
+    for attempt in range(1, retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError:
+            raise
+        except Exception as exc:  # network/TLS/transient transport failures
+            last_error = exc
+            if attempt >= retries or not _is_retryable_url_error(exc):
+                raise
+            delay = base_delay_seconds * (2 ** (attempt - 1))
+            print(
+                f"[Cartesia] transient network error (attempt {attempt}/{retries}): {exc}. "
+                f"Retrying in {delay:.1f}s...",
+                file=sys.stderr,
+                flush=True,
+            )
+            time.sleep(delay)
+    assert last_error is not None
+    raise last_error
 
 
 def require_env(name: str) -> str:
@@ -64,12 +117,16 @@ def mint_agent_access_token(api_key: str, expires_in: int) -> str:
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            payload = json.loads(resp.read().decode())
+        payload = _urlopen_json_with_retry(req, timeout=60, retries=3)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode(errors="replace")
         raise CartesiaConfigError(
             f"access-token request failed ({exc.code}): {detail}"
+        ) from exc
+    except Exception as exc:
+        raise CartesiaConfigError(
+            "access-token request failed due to a network/TLS error: "
+            f"{exc}. You can retry, set CARTESIA_ACCESS_TOKEN, or run with direct API key auth."
         ) from exc
     token = payload.get("token")
     if not token:
@@ -84,7 +141,16 @@ def resolve_bearer_token(*, use_api_key_directly: bool, expires_in: int) -> str:
     api_key = require_env("CARTESIA_API_KEY")
     if use_api_key_directly:
         return api_key
-    return mint_agent_access_token(api_key, expires_in=expires_in)
+    try:
+        return mint_agent_access_token(api_key, expires_in=expires_in)
+    except CartesiaConfigError as exc:
+        # Fallback for intermittent /access-token transport failures.
+        print(
+            f"[Cartesia] Falling back to direct API key bearer after token mint failure: {exc}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return api_key
 
 
 def _pcm_sample_rate(input_format: str) -> int:
@@ -659,12 +725,15 @@ def _call_cartesia_json(url: str, *, timeout: int = 60) -> dict[str, Any]:
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode())
+        return _urlopen_json_with_retry(req, timeout=timeout, retries=3)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode(errors="replace")
         raise CartesiaConfigError(
             f"Cartesia Calls API request failed ({exc.code}): {detail}"
+        ) from exc
+    except Exception as exc:
+        raise CartesiaConfigError(
+            f"Cartesia Calls API request failed due to network/TLS error: {exc}"
         ) from exc
 
 
@@ -711,12 +780,15 @@ def _post_multipart_cartesia_stt(
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return json.loads(resp.read().decode())
+        return _urlopen_json_with_retry(req, timeout=timeout, retries=3)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode(errors="replace")
         raise CartesiaConfigError(
             f"Cartesia STT request failed ({exc.code}): {detail}"
+        ) from exc
+    except Exception as exc:
+        raise CartesiaConfigError(
+            f"Cartesia STT request failed due to network/TLS error: {exc}"
         ) from exc
 
 
