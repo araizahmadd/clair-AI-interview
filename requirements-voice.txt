@@ -1,3 +1,0 @@
-# Optional: ElevenLabs voice mode and Cartesia mic/speaker. macOS: brew install portaudio first.
-# Linux: install portaudio dev package (e.g. portaudio19-dev), then pip install -r requirements-voice.txt
-pyaudio>=0.2.14

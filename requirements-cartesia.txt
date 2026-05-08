@@ -1,4 +1,0 @@
-# Cartesia agent voice WebSocket client (cartesia_agent_voice.py).
-# PyAudio: install PortAudio first on macOS (brew install portaudio), then requirements-voice.txt
-websockets>=12.0
-python-dotenv>=1.0

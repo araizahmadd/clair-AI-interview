@@ -86,7 +86,7 @@ def _run_voice(agent_id: str) -> None:
             "Voice mode needs PyAudio (and on macOS, the PortAudio library from Homebrew).\n"
             "  macOS:\n"
             "    brew install portaudio\n"
-            "    pip install -r requirements-voice.txt\n"
+            "    pip install -r requirements.txt\n"
             "  Then run again with --mode voice.\n"
             f"  ({exc})",
             file=sys.stderr,
