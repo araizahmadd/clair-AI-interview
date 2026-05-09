@@ -3,10 +3,18 @@ from __future__ import annotations
 import threading
 import time
 from pathlib import Path
+import sys
 from uuid import uuid4
 
 import streamlit as st
 from dotenv import load_dotenv
+
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_BACKEND = _ROOT / "backend"
+if str(_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_BACKEND))
 
 from interview_agent.graph.nodes import (
     node_analyze_interview_report,
@@ -34,6 +42,7 @@ st.markdown(
         background: linear-gradient(180deg, #0d0d0d 0%, #151515 100%);
         color: #f2f2f2;
         font-family: 'Space Mono', monospace;
+        font-size: 1.0625rem;
       }
       .hero {
         margin: 1rem auto 1.5rem auto;
@@ -46,7 +55,7 @@ st.markdown(
       }
       .hero-title {
         font-family: 'Press Start 2P', monospace;
-        font-size: clamp(2.85rem, 12vw, 6.75rem);
+        font-size: clamp(3.5rem, 14vw, 8.25rem);
         letter-spacing: 0;
         line-height: 1.35;
         margin: 0 !important;
@@ -60,7 +69,7 @@ st.markdown(
       .hero-subtitle {
         font-family: 'Press Start 2P', monospace;
         color: #b8b8b8;
-        font-size: clamp(0.45rem, 2vw, 0.65rem);
+        font-size: clamp(0.58rem, 2.5vw, 0.82rem);
         letter-spacing: 0.04em;
         line-height: 1.85;
         margin: 0 !important;
@@ -77,7 +86,7 @@ st.markdown(
       }
       .retro-title {
         font-family: 'Press Start 2P', monospace;
-        font-size: clamp(0.95rem, 4vw, 1.85rem);
+        font-size: clamp(1.1rem, 4.5vw, 2.15rem);
         text-transform: none;
         letter-spacing: 0;
         margin-bottom: 0.75rem;
@@ -87,7 +96,7 @@ st.markdown(
       .retro-subtitle {
         font-family: 'Press Start 2P', monospace;
         color: #a8a8a8;
-        font-size: clamp(0.4rem, 1.75vw, 0.52rem);
+        font-size: clamp(0.48rem, 2vw, 0.62rem);
         letter-spacing: 0.06em;
         line-height: 1.85;
         margin-bottom: 1rem !important;
@@ -95,7 +104,7 @@ st.markdown(
       }
       .pixel-heading {
         font-family: 'Press Start 2P', monospace;
-        font-size: clamp(0.55rem, 2.2vw, 0.72rem);
+        font-size: clamp(0.65rem, 2.6vw, 0.85rem);
         letter-spacing: 0.06em;
         text-transform: uppercase;
         margin: 0.75rem 0 0.5rem 0 !important;
@@ -163,6 +172,7 @@ def _init_state() -> None:
             "error": None,
             "final_state": None,
             "stop_requested": False,
+            "voice_init_banner_until": 0.0,
         }
 
 
@@ -184,6 +194,7 @@ def _reset_flow() -> None:
         "error": None,
         "final_state": None,
         "stop_requested": False,
+        "voice_init_banner_until": 0.0,
     }
 
 
@@ -241,7 +252,7 @@ def _execute_prep_from_queue() -> None:
         st.error("Preparation data was missing. Please try Start Interview again.")
         return
 
-    upload_dir = Path("interview_agent/artifacts/ui_uploads").resolve()
+    upload_dir = Path("backend/interview_agent/artifacts/ui_uploads").resolve()
     upload_dir.mkdir(parents=True, exist_ok=True)
     resume_path = upload_dir / f"{uuid4()}_{rn}"
     resume_path.write_bytes(bytes(rb))
@@ -289,6 +300,7 @@ def _execute_prep_from_queue() -> None:
         "error": None,
         "final_state": None,
         "stop_requested": False,
+        "voice_init_banner_until": 0.0,
     }
     st.session_state.page = "interview"
     st.rerun()
@@ -353,9 +365,23 @@ def _render_interview_page() -> None:
             daemon=True,
         )
         runtime["thread"] = worker
+        # Show a short startup hint while Cartesia/emotion stack is booting.
+        runtime["voice_init_banner_until"] = time.time() + 10
         worker.start()
 
     stop_sent = bool(runtime["stop_requested"])
+    show_voice_init_banner = (
+        not stop_sent
+        and not runtime["done"]
+        and not runtime["error"]
+        and time.time() < float(runtime.get("voice_init_banner_until", 0.0))
+    )
+    if show_voice_init_banner:
+        st.info(
+            "Initializing voice interview... just a second. "
+            "Camera is ready; audio session is starting in the background."
+        )
+
     st.markdown('<p class="pixel-heading">Camera</p>', unsafe_allow_html=True)
     st.camera_input("Live camera", label_visibility="collapsed", disabled=stop_sent)
     if st.button(

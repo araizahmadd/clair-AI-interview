@@ -5,12 +5,10 @@ It combines resume parsing, job description analysis, optional company research,
 
 ## What This Repository Includes
 
-- `interview_agent/`: Main LangGraph-based interview workflow.
-- `frontend_streamlit.py`: Streamlit UI for end-to-end interview sessions.
-- `interview_prep_langgraph.py`: CLI flow for resume/JD to interview questions.
-- `cartesia_agent_voice.py`: Cartesia voice session script.
-- `elevenlabs_agent_chat.py`: ElevenLabs text/voice interaction script.
-- `interview_agent/artifacts/`: Generated transcripts, reports, session logs, and emotion outputs.
+- `backend/interview_agent/`: Main LangGraph-based interview workflow.
+- `frontend/frontend_streamlit.py`: Streamlit UI for end-to-end interview sessions.
+- `scripts/`: CLI entrypoints (interview prep, Cartesia voice, ElevenLabs chat, emotion scanner).
+- `backend/interview_agent/artifacts/`: Generated transcripts, reports, session logs, and emotion outputs.
 
 ## Features
 
@@ -61,7 +59,7 @@ Fill `.env` with the keys needed for your selected workflow.
 ## Run The Streamlit App
 
 ```bash
-streamlit run frontend_streamlit.py
+streamlit run frontend/frontend_streamlit.py
 ```
 
 This launches the full interview flow:
@@ -69,6 +67,50 @@ This launches the full interview flow:
 - paste job description
 - optionally provide company name
 - start interview, then review generated report
+
+## Workflow Diagram
+
+```mermaid
+flowchart TD
+    A[User Starts App] --> B{Interface}
+    B -->|Web UI| C[Streamlit: frontend/frontend_streamlit.py]
+    B -->|CLI| D[scripts/interview_prep.py]
+
+    C --> E[Upload Resume PDF + Paste JD + Optional Company]
+    D --> E
+
+    E --> F[LangGraph Workflow: backend/interview_agent/graph/workflow.py]
+
+    F --> G[Node: Scan Resume PDF]
+    G --> H{Company Provided?}
+    H -->|Yes| I[Node: Tavily Company Research]
+    H -->|No| J[Skip Research]
+    I --> K[Node: Generate Interview Questions]
+    J --> K
+
+    K --> L{Voice Enabled?}
+    L -->|No| M[Return Interview Questions JSON]
+    L -->|Yes| N[Node: Voice Interview (Cartesia)]
+
+    N --> O[Start Cartesia WebSocket Session]
+    N --> P[Start Background Emotion Monitor]
+    O --> Q[Capture Mic + Play Agent Audio]
+    P --> R[Write Emotion CSV Logs]
+
+    Q --> S{Interview Completed?}
+    S -->|Yes| T[Fetch Official Cartesia Transcript]
+    S -->|No/Error| U[Save Errors + Partial Artifacts]
+
+    T --> V[Summarize Emotion Data]
+    V --> W[Generate Final Interview Report]
+    W --> X[Save Artifacts]
+
+    X --> Y[artifacts/sessions/: events, transcript, audio]
+    X --> Z[artifacts/emotion/: emotion_log.csv]
+    X --> AA[artifacts/reports/: markdown report]
+
+    AA --> AB[Display in Streamlit or CLI Output]
+```
 
 ## Run The CLI Interview Pipeline
 
@@ -85,32 +127,35 @@ Optional flags:
 
 ## Other Entrypoints
 
-- `python interview_prep_langgraph.py`  
+- `python scripts/interview_prep.py`  
   Alternate prep flow script.
-- `python cartesia_agent_voice.py`  
+- `python scripts/cartesia_agent_voice.py`  
   Direct Cartesia voice test script.
-- `python elevenlabs_agent_chat.py`  
+- `python scripts/elevenlabs_agent_chat.py`  
   ElevenLabs conversational script.
+- `python scripts/emotion_scanner.py`  
+  Standalone emotion monitor test script.
 
 ## Project Structure (High Level)
 
 ```text
 .
-├── interview_agent/
-│   ├── graph/                # LangGraph nodes, state, workflow
-│   ├── voice/                # Cartesia voice integration
-│   ├── emotion/              # Emotion scanner integration
-│   └── artifacts/            # Runtime outputs (reports, logs, transcripts)
-├── frontend_streamlit.py     # Web UI
-├── cartesia_agent_voice.py   # Cartesia CLI
-├── elevenlabs_agent_chat.py  # ElevenLabs CLI
-└── requirements-*.txt
+├── backend/
+│   └── interview_agent/
+│       ├── graph/            # LangGraph nodes, state, workflow
+│       ├── voice/            # Cartesia voice integration
+│       ├── emotion/          # Emotion scanner integration
+│       └── artifacts/        # Runtime outputs (reports, logs, transcripts)
+├── frontend/
+│   └── frontend_streamlit.py # Web UI
+├── scripts/                  # All CLI entrypoints
+└── requirements.txt
 ```
 
 ## Security And Git Hygiene
 
 - Do not commit `.env` or API keys.
-- Generated files under `interview_agent/artifacts/` are runtime outputs and should stay out of version control.
+- Generated files under `backend/interview_agent/artifacts/` are runtime outputs and should stay out of version control.
 - Large local model/cache files should remain ignored.
 
 ## Troubleshooting

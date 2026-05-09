@@ -40,7 +40,7 @@ def node_generate_interview_questions(state: InterviewPrepState) -> dict:
     prompt = "\n".join(context_parts)
     instructions = (
         "You are an experienced hiring manager. Using ONLY the materials above, propose "
-        "exactly five interview questions for THIS candidate and THIS role. JUST YES OR NO QUESTIONS ONLY\n"
+        "exactly 3 interview questions for THIS candidate and THIS role. Keep them short and easy to answer.\n"
         "Requirements:\n"
         "- Questions must connect explicit resume evidence to JD responsibilities.\n"
         "- Prefer behavioral + technical depth probes; avoid generic clichés.\n"

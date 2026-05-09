@@ -66,8 +66,31 @@ def node_analyze_interview_report(state: InterviewPrepState) -> dict:
         "- One-sentence summary: ...\n"
         "- Top 3 next steps: ...\n"
         "## Nonverbal / Emotion Signal\n"
-        "- Use the emotion monitor summary only as a weak supportive signal, not as proof of intent or ability.\n"
-        "- Mention data limitations when samples are sparse or confidence is low.\n\n"
+        "Write this section with extra care. Automated facial-emotion scores are noisy and often wrong; "
+        "they are not a measure of the candidate's true feelings, personality, or fitness for the role.\n"
+        "- Open with 2-4 sentences of general caution: lighting, camera angle, glasses, compression, "
+        "resting face, and concentration can be misread; low average model confidence "
+        "(for example below ~0.6) means labels are especially unreliable.\n"
+        "- Parse the emotion monitor summary. If it reports average confidence, comment on whether it is "
+        "relatively low or high and what that implies for how strongly to trust the distribution.\n"
+        "- If no emotion data or no usable samples: say so briefly and skip invented interpretations.\n"
+        "- Otherwise, for **each distinct emotion label** that appears meaningfully in the distribution "
+        "(not \"no_face\" / \"face_detected\"), add a short bullet that covers:\n"
+        "  - What the monitor suggests (percentage/confidence context).\n"
+        "  - **Likely alternative reads** on camera—map labels to plausible benign causes, for example:\n"
+        "    - Sadness → resting face, fatigue, focused listening, mild stress, not necessarily low mood.\n"
+        "    - Fear / anxiety-like cues → anticipation, stakes, intense concentration, processing a hard question.\n"
+        "    - Anger / disgust-like cues → determination, frustration with tech or retakes, strong emphasis, "
+        "skepticism while thinking, asymmetry from speech or shadows—not hostility.\n"
+        "    - Happiness / joy → polite or nervous smiling, relief after answering; tie to \"confidence\" only "
+        "if the transcript and delivery sound confident—do not equate a smile metric with self-assurance alone.\n"
+        "    - Surprise → eyebrow raise while thinking, reacting to wording, emphasis—not necessarily shock.\n"
+        "    - Neutral → calm professionalism, seriousness, or flat affect under poor capture.\n"
+        "  - One line reconciling with **spoken delivery**: if the transcript reads composed or confident, "
+        "state that voice and content are stronger signals than the face label and should weigh more.\n"
+        "- Never diagnose mental health. Never claim the candidate \"was\" a given emotion; use wording like "
+        "\"the model tended toward,\" \"may reflect,\" or \"can be confused with.\"\n"
+        "- Close by recommending the candidate prioritize actionable feedback from answers above over facial labels.\n\n"
         "Ground feedback in transcript evidence. Do not invent answers the candidate did not give. "
         "If the transcript is sparse or empty, explain that the main improvement is to answer audibly and fully, "
         "then provide general preparation tips for the asked questions. Use emotion data cautiously.\n\n"
@@ -86,7 +109,7 @@ def node_analyze_interview_report(state: InterviewPrepState) -> dict:
         if not report_md:
             return {"errors": ["Interview report generation failed: empty model response."]}
 
-        base_dir = Path("interview_agent/artifacts/reports").resolve()
+        base_dir = Path("backend/interview_agent/artifacts/reports").resolve()
         base_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         report_path = base_dir / f"interview_report_{stamp}.md"

@@ -45,7 +45,7 @@ models/
 
 # Generated app artifacts
 emotion_log.csv
-interview_agent/artifacts/
+backend/interview_agent/artifacts/
 
 # User-local documents
 *.pdf

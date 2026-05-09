@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
-"""Standalone shim for the interview emotion monitor."""
+"""Standalone CLI for interview emotion monitoring."""
 
 from __future__ import annotations
 
 import argparse
+import sys
 import threading
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_BACKEND = _ROOT / "backend"
+if str(_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_BACKEND))
 
 from interview_agent.emotion.scanner import run_emotion_scanner
 

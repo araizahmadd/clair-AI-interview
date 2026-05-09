@@ -48,7 +48,9 @@ def node_voice_interview(state: InterviewPrepState) -> dict:
     if emotion_enabled:
         log_node("voice_interview", "Starting background emotion monitor.")
         emotion_csv = (
-            Path("interview_agent/artifacts/emotion") / session_id / "emotion_log.csv"
+            Path("backend/interview_agent/artifacts/emotion")
+            / session_id
+            / "emotion_log.csv"
         )
         show_window = os.getenv("EMOTION_SHOW_WINDOW", "").strip().lower() in {
             "1",

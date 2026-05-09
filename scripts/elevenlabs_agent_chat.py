@@ -10,9 +10,17 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+from pathlib import Path
 from typing import Sequence
 
 from dotenv import load_dotenv
+
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_BACKEND = _ROOT / "backend"
+if str(_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_BACKEND))
 
 
 def _require_env(name: str) -> str:
@@ -46,7 +54,7 @@ def _run_text(agent_id: str, starter_messages: Sequence[str]) -> None:
             conversation.send_user_message(msg)
 
         print(
-            "Commands: /quit — exit   |   /context <text> — send contextual update (not a user turn)"
+            "Commands: /quit - exit   |   /context <text> - send contextual update (not a user turn)"
         )
         while True:
             line = input("You: ").strip()
@@ -111,7 +119,7 @@ def _run_voice(agent_id: str) -> None:
     conversation.start_session()
     try:
         input(
-            "Voice session running — use your default mic and speakers.\n"
+            "Voice session running - use your default mic and speakers.\n"
             "Press Enter here to stop the session...\n"
         )
     finally:

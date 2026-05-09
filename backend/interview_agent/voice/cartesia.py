@@ -208,7 +208,7 @@ def _save_session_artifacts(
     mic_pcm: bytes,
     mic_sample_rate: int,
 ) -> tuple[str, str, str | None]:
-    base_dir = Path("interview_agent/artifacts/sessions").resolve()
+    base_dir = Path("backend/interview_agent/artifacts/sessions").resolve()
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     run_dir = base_dir / stamp
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -256,9 +256,15 @@ def build_start_agent_and_metadata(
         return None, None
 
     start_metadata["session_questions"] = cleaned
+    interview_style = (
+        "\n\nInterview style: do not give feedback, coaching, grading, or evaluation "
+        "after each answer. Use only a brief neutral acknowledgement or transition "
+        "before moving to the next question. Save any substantive feedback for the "
+        "final wrap-up, and keep it concise."
+    )
     appendix = (
         "\n\nSession script — ask the user these questions in order. "
-        "Ask one at a time and acknowledge their answers before continuing. "
+        "Ask one at a time. "
         "After the final answer, thank the candidate and end the call. "
         "If your runtime exposes an end_call tool or AgentEndCall, use it immediately after the closing message:\n"
         + "\n".join(f"{i}. {q}" for i, q in enumerate(cleaned, 1))
@@ -270,12 +276,18 @@ def build_start_agent_and_metadata(
     if system_prompt_file:
         base = Path(system_prompt_file).expanduser().read_text(encoding="utf-8")
         if questions_metadata_only:
-            start_agent["system_prompt"] = base.rstrip()
+            start_agent["system_prompt"] = base.rstrip() + interview_style
         else:
-            start_agent["system_prompt"] = base.rstrip() + appendix
+            start_agent["system_prompt"] = base.rstrip() + interview_style + appendix
     elif appendix and not questions_metadata_only:
         start_agent["system_prompt"] = (
-            "Follow your configured agent role and speaking style.\n" + appendix.strip()
+            "Follow your configured agent role and speaking style."
+            + interview_style
+            + appendix
+        )
+    elif questions_metadata_only:
+        start_agent["system_prompt"] = (
+            "Follow your configured agent role and speaking style." + interview_style
         )
 
     return start_agent or None, start_metadata or None
@@ -801,7 +813,7 @@ def transcribe_mic_audio_fallback(
     payload = _post_multipart_cartesia_stt(audio_path=audio_path)
     text = str(payload.get("text") or "").strip()
 
-    base_dir = Path("interview_agent/artifacts/sessions").resolve()
+    base_dir = Path("backend/interview_agent/artifacts/sessions").resolve()
     run_dir = base_dir / f"{session_id}_stt_fallback"
     run_dir.mkdir(parents=True, exist_ok=True)
     raw_path = run_dir / "cartesia_stt.json"
@@ -886,7 +898,7 @@ def _format_official_transcript(transcript: list[dict[str, Any]]) -> str:
 
 
 def save_official_call_artifacts(call: dict[str, Any], *, session_id: str) -> dict[str, Any]:
-    base_dir = Path("interview_agent/artifacts/sessions").resolve()
+    base_dir = Path("backend/interview_agent/artifacts/sessions").resolve()
     call_id = str(call.get("id") or session_id)
     run_dir = base_dir / call_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -908,7 +920,7 @@ def save_official_call_artifacts(call: dict[str, Any], *, session_id: str) -> di
 
 
 def _save_calls_debug_payload(payload: dict[str, Any], *, session_id: str) -> str:
-    base_dir = Path("interview_agent/artifacts/sessions").resolve()
+    base_dir = Path("backend/interview_agent/artifacts/sessions").resolve()
     run_dir = base_dir / f"{session_id}_calls_debug"
     run_dir.mkdir(parents=True, exist_ok=True)
     debug_path = run_dir / "list_calls_payload.json"
